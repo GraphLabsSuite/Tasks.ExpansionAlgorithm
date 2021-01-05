@@ -7,9 +7,10 @@ import {
         Template,
         Toolbar,
         ToolButtonList, graph
-} from 'graphlabs.core.template';
-import {IGraph, IVertex, IEdge, GraphGenerator, Graph, Vertex, Edge} from 'graphlabs.core.graphs';
+} from "graphlabs.core.template";
+import {IGraph, IVertex, IEdge, GraphGenerator, Graph, Vertex, Edge} from "graphlabs.core.graphs";
 import { ChangeEvent } from "react";
+import {Matrix, MatrixCell} from "graphlabs.core.lib";
 
 
 class App extends Template {
@@ -120,8 +121,7 @@ class App extends Template {
         return graph;
     }
 
-
-
+    matrix: number[][] = [];
 
 
     constructor(props: {}) {
@@ -130,6 +130,7 @@ class App extends Template {
                this.getArea = this.getArea.bind(this);
                this.checkAnswer = this.checkAnswer.bind(this);
                this.checkRoute = this.checkRoute.bind(this);
+               this.handler = this.handler.bind(this);
              //  this.checkConnected = this.checkConnected.bind(this);
        }
 
@@ -162,11 +163,21 @@ private checkRoute(value: ChangeEvent<HTMLInputElement>){
                    <p><b>Введите вершины: </b>
                        <input type="text" name={"ans"} size={8} value={this.studentRoute}
                               onChange={this.checkRoute}/></p>
+                   <p><b>Введите атрибуты волны для каждой вершины: </b>
+                       <Matrix
+                           rows={1}
+                           columns={this.graph.vertices.length}
+                           readonly={false}
+                           handler={this.handler}
+                           matrixFilling={true}
+                       /></p>
 
                </div>);
        }
 
-
+    handler(values: number[][]) {
+        this.matrix = values;
+    }
 
         protected getArea(): React.SFC<{}> {
         //
@@ -201,6 +212,12 @@ private checkRoute(value: ChangeEvent<HTMLInputElement>){
                console.log(this.waveAttributes(this.graph)[k][2]);
           // }
        }
+            let countOfCorrectWave: number = 0; //
+            for (let d = 0; d < this.graph.vertices.length; d++){
+                if (this.graph.vertices[d].wave === this.matrix[0][d] + ''){
+                    countOfCorrectWave += 1;
+                }
+            } // возвращает количество правльно введенных атрибутов волны для вершин
 
         for (let m = 0; m < answerVertices.length; m ++){
             for (let j = 0; j < routeAtr.length; j++){
@@ -224,12 +241,13 @@ private checkRoute(value: ChangeEvent<HTMLInputElement>){
             finalRoute = true;
         } else finalRoute = false;
         let res = 0;
-        if (( (answer===dist) &&  (finalRoute === true))
+        if (( (answer===dist) &&  (finalRoute === true) && (countOfCorrectWave === this.graph.vertices.length))
             || ( (typeof (answer) === "undefined" ) &&( typeof (answerRoute) === 'undefined'))){
             res = 0;
-        }else if (( answer!==dist) && (finalRoute === true)){
+        }else if (( answer!==dist) && (finalRoute === true) && (countOfCorrectWave === this.graph.vertices.length)){
             res = 20;
-        }else if(( answer===dist) && ((answerRoute === '') || (finalRoute === false))) {
+        }else if(( answer===dist) && ((answerRoute === '') || (finalRoute === false))
+            && (countOfCorrectWave === this.graph.vertices.length)) {
             res = 40;
             //}else if(!this.isConnected(this.graph)&& (ans==='1') && answer!==''){
             // res = 100;
