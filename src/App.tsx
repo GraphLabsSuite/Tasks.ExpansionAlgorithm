@@ -3,10 +3,13 @@ import './App.css';
 
 import {
         GraphVisualizer,
+        IGraphView,
         graphModel,
         Template,
         Toolbar,
-        ToolButtonList, graph
+        ToolButtonList,
+        graph,
+        store
 } from "graphlabs.core.template";
 import {IGraph, IVertex, IEdge, GraphGenerator, Graph, Vertex, Edge} from "graphlabs.core.graphs";
 import { ChangeEvent } from "react";
@@ -96,7 +99,8 @@ class App extends Template {
         }
     ]
 
-    graph: IGraph<IVertex, IEdge> = this.graphMy(this.data[0].value);
+    //graph: IGraph<IVertex, IEdge> = this.graphMy(this.data[0].value);
+    graph: IGraph< IVertex, IEdge> = this.get_graph();
     private studentAnswer?: string;
     private studentAns?: string;
     private studentRoute?: string;
@@ -120,6 +124,37 @@ class App extends Template {
         }
         return graph;
     }
+
+    get_graph(): IGraph<IVertex, IEdge>{
+        const graph: IGraphView = store.getState().graph;
+        let data =[
+            {
+                "type": "graph",
+                "value": {
+                    "vertices": [""],
+                    "edges": [{
+                        "source": "",
+                        "target": ""
+                    }]
+                }
+
+            }
+        ]
+        let vertices = graph.vertices;
+        let edges = graph.edges;
+        let i = 0;
+        data[0].value.vertices.shift();
+        vertices.forEach((v: any) =>{
+            i = data[0].value.vertices.push(i.toString());
+        });
+        data[0].value.edges.shift();
+        edges.forEach((e:any) => {
+            data[0].value.edges.push({"source": e.vertexOne, "target": e.vertexTwo})
+        });
+        let result: IGraph<IVertex, IEdge> = this.graphManager(data[0].value);
+        return result;
+    }
+
 
     matrix: number[][] = [];
 
@@ -183,6 +218,7 @@ private checkRoute(value: ChangeEvent<HTMLInputElement>){
         protected getArea(): React.SFC<{}> {
         //
             //if (this.isConnected(this.graph)){
+                this.graph = this.get_graph();
                 this.waveAttributes(this.graph);
             //}
               return () => <GraphVisualizer
