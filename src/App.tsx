@@ -13,15 +13,17 @@ import {
 } from "graphlabs.core.template";
 import {IGraph, IVertex, IEdge, GraphGenerator, Graph, Vertex, Edge} from "graphlabs.core.graphs";
 import { ChangeEvent } from "react";
-import {Matrix, MatrixCell} from "graphlabs.core.lib";
+import {Matrix} from "graphlabs.core.lib";
 
 
 class App extends Template {
 
+
+
     //graph: IGraph<IVertex, IEdge> = GraphGenerator.generate(5);
     //graph: Graph<IVertex, IEdge> = store.getState().graph
 
-    data = [
+   /* data = [
         {
             "type": "graph",
             "value": {
@@ -97,15 +99,16 @@ class App extends Template {
                 ]
             }
         }
-    ]
+    ]*/
 
     //graph: IGraph<IVertex, IEdge> = this.graphMy(this.data[0].value);
-    graph: IGraph< IVertex, IEdge> = this.get_graph();
+    //graph: IGraph< IVertex, IEdge> = this.get_graph();
+    graph: IGraph< IVertex, IEdge> = this.my_graph();
     private studentAnswer?: string;
     private studentAns?: string;
     private studentRoute?: string;
 
-    public graphMy(data:any): IGraph<IVertex, IEdge> {
+    /*public graphMy(data:any): IGraph<IVertex, IEdge> {
         const graph: IGraph<IVertex, IEdge> = new Graph() as unknown as IGraph<IVertex, IEdge>;
         if (data) {
             let vertices = data.vertices;
@@ -123,9 +126,36 @@ class App extends Template {
 
         }
         return graph;
+    }*/
+
+    my_graph():IGraph<IVertex, IEdge>{
+        const data = sessionStorage.getItem('variant');
+        let graph: IGraph<IVertex, IEdge> = new Graph() as unknown as IGraph<IVertex, IEdge>;
+        let objectData;
+        try {
+            objectData = JSON.parse(data || 'null');
+        } catch (err) {
+            console.log('Error while JSON parsing');
+        }
+        if (objectData && objectData.data[0] && objectData.data[0].type === 'graph') {
+            graph = this.graphManager(objectData.data[0].value);
+            const vertices = objectData.data[0].value.graph.vertices;
+            const edges  = objectData.data[0].value.graph.edges;
+            vertices.forEach((v: any) => {
+                graph.addVertex(new Vertex(v));
+            });
+            edges.forEach((e: any) => {
+                if (e.name) {
+                    graph.addEdge(new Edge(graph.getVertex(e.source)[0], graph.getVertex(e.target)[0], e.name[0]));
+                } else {
+                    graph.addEdge(new Edge(graph.getVertex(e.source)[0], graph.getVertex(e.target)[0]));
+                }
+            });
+        }
+        return graph;
     }
 
-    get_graph(): IGraph<IVertex, IEdge>{
+    /*get_graph(): IGraph<IVertex, IEdge>{
         const graph: IGraphView = store.getState().graph;
         let data =[
             {
@@ -153,7 +183,7 @@ class App extends Template {
         });
         let result: IGraph<IVertex, IEdge> = this.graphManager(data[0].value);
         return result;
-    }
+    }*/
 
 
     matrix: number[][] = [];
@@ -218,12 +248,11 @@ private checkRoute(value: ChangeEvent<HTMLInputElement>){
         protected getArea(): React.SFC<{}> {
         //
             //if (this.isConnected(this.graph)){
-                this.graph = this.get_graph();
                 this.waveAttributes(this.graph);
+                this.graph = this.my_graph();
             //}
               return () => <GraphVisualizer
                    graph={this.graph}
-                   //graph={graphModel}
                    adapterType={'readable'}
                    namedEdges={true}
                    incidentEdges={true}
